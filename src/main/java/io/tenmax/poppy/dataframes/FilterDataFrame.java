@@ -2,6 +2,7 @@ package io.tenmax.poppy.dataframes;
 
 import io.tenmax.poppy.DataColumn;
 import io.tenmax.poppy.DataRow;
+import io.tenmax.poppy.ProjectColumnSpec;
 
 import java.util.Iterator;
 import java.util.function.Predicate;
@@ -11,7 +12,7 @@ public class FilterDataFrame extends BaseDataFrame {
     private final Predicate<DataRow> predicate;
 
     public FilterDataFrame(BaseDataFrame parent, Predicate<DataRow> predicate) {
-        super(parent.getColumns());
+        super(parent.context, parent.getColumns());
         this.parent = parent;
         this.predicate = predicate;
     }
@@ -26,23 +27,13 @@ public class FilterDataFrame extends BaseDataFrame {
         return new FilterIterator(parent.getPartition(index));
     }
 
-    class FilterIterator implements Iterator<DataRow>, DataRow {
+    class FilterIterator implements Iterator<DataRow> {
         private Iterator<DataRow> wrapped;
         private DataRow row;
         private boolean ready;
 
         FilterIterator(Iterator<DataRow> wrapped) {
             this.wrapped = wrapped;
-        }
-
-        @Override
-        public Object get(int index) {
-            return row.get(index);
-        }
-
-        @Override
-        public Object get(String name) {
-            return row.get(name);
         }
 
         @Override
@@ -64,7 +55,7 @@ public class FilterDataFrame extends BaseDataFrame {
         }
 
         private void findNext() {
-            while(wrapped.hasNext()) {
+            while (wrapped.hasNext()) {
                 row = wrapped.next();
                 if (predicate.test(row)) {
                     ready = true;

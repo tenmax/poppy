@@ -3,8 +3,8 @@ package io.tenmax.poppy;
 import io.tenmax.poppy.dataframes.BaseDataFrame;
 
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Consumer;
 
 public interface DataFrame extends Iterable<DataRow>{
 
@@ -43,7 +43,11 @@ public interface DataFrame extends Iterable<DataRow>{
 
     DataFrame distinct(String... columns);
 
+    DataFrame peek(Consumer<DataRow> consumer);
+
     DataFrame filter(Predicate<DataRow> predicate);
+
+    DataFrame parallel(int numThreads);
 
     void print();
 }

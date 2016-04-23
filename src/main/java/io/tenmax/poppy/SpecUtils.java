@@ -57,7 +57,7 @@ public class SpecUtils {
 
     public static AggregateColumnSpecBuilder avgLong(String columnRef) {
         return new AggregateColumnSpecBuilder(
-                Long.class,
+                Double.class,
                 Collectors.averagingLong((DataRow row) -> row.getLong(columnRef)));
     }
 

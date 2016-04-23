@@ -13,7 +13,7 @@ public class SortDataFrame extends BaseDataFrame{
     private final BaseDataFrame parent;
 
     public SortDataFrame(BaseDataFrame parent, SortSpec[] specs) {
-        super(parent.columns);
+        super(new ExecutionContext(), parent.columns);
 
         for (SortSpec spec: specs) {
             DataColumn column = parent.getColumn(spec.getColumn());
@@ -34,14 +34,11 @@ public class SortDataFrame extends BaseDataFrame{
 
     @Override
     Iterator<DataRow> getPartition(int index) {
-        int count = parent.getPartitionCount();
         ArrayList<DataRow> rows = new ArrayList<>();
 
-        for (int i=0; i<count; i++) {
-            Iterator<DataRow> partition = parent.getPartition(i);
-            while (partition.hasNext()) {
-                rows.add(partition.next());
-            }
+        Iterator<DataRow> iterator = parent.iterator();
+        while (iterator.hasNext()) {
+            rows.add(iterator.next());
         }
 
         Collections.sort(rows, new DataRowComparator());

@@ -18,7 +18,7 @@ public class ProjectDataFrame extends BaseDataFrame {
     }
 
     public ProjectDataFrame(BaseDataFrame parent, ProjectColumnSpec[] specs) {
-        super(columnsFromSpec(fixSpecs(parent, specs)));
+        super(parent.context, columnsFromSpec(fixSpecs(parent, specs)));
         this.parent = parent;
         this.specs = fixSpecs(parent, specs);
 
@@ -91,12 +91,29 @@ public class ProjectDataFrame extends BaseDataFrame {
         return new ProjectIterator(parent.getPartition(index));
     }
 
-    class ProjectIterator implements Iterator<DataRow>, DataRow {
+    class ProjectIterator implements Iterator<DataRow> {
         private Iterator<DataRow> wrapped;
-        private DataRow row;
 
         ProjectIterator(Iterator<DataRow> wrapped) {
             this.wrapped = wrapped;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return wrapped.hasNext();
+        }
+
+        @Override
+        public DataRow next() {
+            return new ProjectDataRow(wrapped.next());
+        }
+    }
+
+    class ProjectDataRow implements DataRow {
+        private DataRow row;
+
+        ProjectDataRow(DataRow row) {
+            this.row = row;
         }
 
         @Override
@@ -117,17 +134,6 @@ public class ProjectDataFrame extends BaseDataFrame {
             } else {
                 return row.get(spec.getColumn());
             }
-        }
-
-        @Override
-        public boolean hasNext() {
-            return wrapped.hasNext();
-        }
-
-        @Override
-        public DataRow next() {
-            row = wrapped.next();
-            return this;
         }
     }
 }

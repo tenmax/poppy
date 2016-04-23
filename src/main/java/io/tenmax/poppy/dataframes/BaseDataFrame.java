@@ -2,20 +2,26 @@ package io.tenmax.poppy.dataframes;
 
 import io.tenmax.poppy.*;
 import io.tenmax.poppy.exceptions.ColumnNotFoundException;
+import io.tenmax.poppy.iterators.ParallelIterator;
+import io.tenmax.poppy.iterators.SequantialIterator;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 abstract public class BaseDataFrame implements DataFrame{
+    protected final ExecutionContext context;
     protected final DataColumn[] columns;
     protected final HashMap<String, Integer> columnsMap;
     protected DataColumn[] groupedColumns = new DataColumn[0];
 
-    public BaseDataFrame(DataColumn[] columns) {
+    public BaseDataFrame(ExecutionContext context, DataColumn[] columns) {
+        this.context = context;
         this.columns = columns;
         this.columnsMap = new HashMap<>();
 
@@ -97,6 +103,17 @@ abstract public class BaseDataFrame implements DataFrame{
     }
 
     @Override
+    public DataFrame peek(Consumer<DataRow> consumer) {
+        return new PeekDataFrame(this, consumer);
+    }
+
+    @Override
+    public DataFrame parallel(int numThreads) {
+        context.setNumThreads(numThreads);
+        return this;
+    }
+
+    @Override
     public void print() {
         Arrays.stream(columns).forEach(column ->{
             System.out.printf("%s\t", column.getName());
@@ -118,8 +135,15 @@ abstract public class BaseDataFrame implements DataFrame{
         for (int i=0; i<count; i++) {
             iters[i] = getPartition(i);
         }
-        return new SequantialIterator(iters);
+
+        if (context.getNumThreads() > 1) {
+            return new ParallelIterator(context, iters);
+        } else {
+            return new SequantialIterator(context, iters);
+        }
     }
+
+
 
     abstract int getPartitionCount();
 

@@ -5,6 +5,9 @@ import io.tenmax.poppy.DataColumn;
 import io.tenmax.poppy.DataRow;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 public class AggregateDataFrame extends  BaseDataFrame{
@@ -14,7 +17,7 @@ public class AggregateDataFrame extends  BaseDataFrame{
     private final int dimSize;
 
     public AggregateDataFrame(BaseDataFrame parent, AggregateColumnSpec[] specs) {
-        super(columnsFromSpec(parent, specs));
+        super(new ExecutionContext(), columnsFromSpec(parent, specs));
         this.parent = parent;
         this.specs = specs;
         this.dimSize = parent.groupedColumns.length;
@@ -49,9 +52,32 @@ public class AggregateDataFrame extends  BaseDataFrame{
         int count = parent.getPartitionCount();
         HashMap<List, List> result = new HashMap<>();
 
-        for (int i=0; i<count; i++) {
-            combine(result, accumulate(parent.getPartition(i)));
+        for (int i = 0; i < count; i++) {
+            if (parent.context.getNumThreads() == 1) {
+                // sequatial
+                HashMap<List, List> resultPartial = accumulate(parent.getPartition(i));
+                combine(result, resultPartial);
+            } else {
+                // parallel
+                final int fi = i;
+                ExecutorService executorService = Executors.newFixedThreadPool(parent.context.getNumThreads());
+                ArrayList<CompletableFuture<Void>> futures = new ArrayList<>();
+
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    HashMap<List, List> resultPartial = accumulate(parent.getPartition(fi));
+                    synchronized (result) {
+                        combine(result, resultPartial);
+                    }
+                }, executorService);
+
+                futures.add(future);
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+                // shutdown the executor while all tasks complete
+                executorService.shutdown();
+            }
         }
+
         HashMap<List, List> finalResult = finish(result);
         return new AggregateIterator(finalResult);
     }

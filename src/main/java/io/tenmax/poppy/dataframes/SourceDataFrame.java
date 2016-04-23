@@ -19,7 +19,7 @@ public class SourceDataFrame extends BaseDataFrame{
             DataSource<T> dataSource,
             Class<T> clazz)
     {
-        super(schemaFromClass(clazz));
+        super(new ExecutionContext(), schemaFromClass(clazz));
         this.dataSource = dataSource;
         this.mapper = (data, column) -> {
             String columnName = (String)column;
@@ -37,7 +37,7 @@ public class SourceDataFrame extends BaseDataFrame{
             DataColumn[] columns,
             BiFunction<T, String, Object> mapper)
     {
-        super(columns);
+        super(new ExecutionContext(), columns);
         this.dataSource = dataSource;
         this.mapper = mapper;
     }

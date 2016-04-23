@@ -2,6 +2,7 @@ package io.tenmax.poppy.dataframes;
 
 import io.tenmax.poppy.DataColumn;
 import io.tenmax.poppy.DataRow;
+import io.tenmax.poppy.iterators.SequantialIterator;
 
 import java.util.*;
 
@@ -9,7 +10,7 @@ public class DistinctDataFrame extends BaseDataFrame {
     private final BaseDataFrame parent;
 
     public DistinctDataFrame(BaseDataFrame parent, String[] distinctColumns) {
-        super(columnsFromNames(parent, distinctColumns));
+        super(new ExecutionContext(), columnsFromNames(parent, distinctColumns));
 
         this.parent = parent;
     }
@@ -32,37 +33,18 @@ public class DistinctDataFrame extends BaseDataFrame {
 
     @Override
     Iterator<DataRow> getPartition(int index) {
-        int count = parent.getPartitionCount();
-        ArrayList<Iterator> iterators = new ArrayList<>();
-
-        for (int i=0; i<count; i++) {
-            Iterator<DataRow> partition = parent.getPartition(i);
-            iterators.add(partition);
-        }
-
-        SequantialIterator iterator = new SequantialIterator(iterators.toArray(new Iterator[0]));
-
-        return new DistinctIterator(iterator);
+        return new DistinctIterator(parent.iterator());
     }
 
-    class DistinctIterator implements Iterator<DataRow>, DataRow {
+    class DistinctIterator implements Iterator<DataRow> {
         private Iterator<DataRow> wrapped;
         private boolean ready;
-        private List value;
+        private DataRow row;
+
         private HashSet<List> set = new HashSet<>();
 
         DistinctIterator(Iterator<DataRow> wrapped) {
             this.wrapped = wrapped;
-        }
-
-        @Override
-        public Object get(int index) {
-            return value.get(index);
-        }
-
-        @Override
-        public Object get(String name) {
-            return value.get(columnsMap.get(name));
         }
 
         @Override
@@ -71,7 +53,7 @@ public class DistinctDataFrame extends BaseDataFrame {
                 findNext();
             }
 
-            return value != null;
+            return row != null;
         }
 
         @Override
@@ -81,7 +63,7 @@ public class DistinctDataFrame extends BaseDataFrame {
             }
 
             ready = false;
-            return value == null ? null : this;
+            return row;
         }
 
         private void findNext() {
@@ -95,14 +77,32 @@ public class DistinctDataFrame extends BaseDataFrame {
                 }
 
                 if (!set.contains(value)) {
-                    this.value = value;
+                    this.row = new DistinctDataRow(value);
                     this.ready = true;
                     set.add(value);
                     return;
                 }
             }
-            this.value = null;
+            this.row = null;
             this.ready = false;
+        }
+    }
+
+    class DistinctDataRow implements DataRow {
+        private List value;
+
+        DistinctDataRow(List value) {
+            this.value = value;
+        }
+
+        @Override
+        public Object get(int index) {
+            return value.get(index);
+        }
+
+        @Override
+        public Object get(String name) {
+            return value.get(columnsMap.get(name));
         }
     }
 }
