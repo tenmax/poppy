@@ -13,7 +13,7 @@ import java.util.Iterator;
  * SimpleDataSource use the java reflection to define the columns. And using
  * the Java Bean conversion to get the value of a column.
  *
- * @param <T>
+ * @param <T> The source data type.
  */
 public class SimpleDataSource<T> implements DataSource<T> {
     private final Iterable<T>[] iterables;
