@@ -1,12 +1,37 @@
 apply plugin: 'java'
+apply plugin: 'com.novoda.bintray-release'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.novoda:bintray-release:0.3.4'
+    }
+}
 
 repositories {
     jcenter()
 }
+
+group = MAVEN_GROUP
+version = LIBRARY_VERSION
 
 dependencies {
     compile 'org.slf4j:slf4j-nop:1.7.7'
     compile 'commons-beanutils:commons-beanutils:1.9.2'
 
     testCompile 'junit:junit:4.12'
+}
+
+publish {
+    userOrg = USER_ORG
+    groupId = MAVEN_GROUP
+    artifactId = MAVEN_ARTIFACT
+    publishVersion = LIBRARY_VERSION
+    desc = DESCRIPTION
+    website = WEBSITE
+    repoName = BINTRAY_REPO
+    bintrayUser = BINTRAY_USER
+    bintrayKey = BINTRAY_KEY
 }
