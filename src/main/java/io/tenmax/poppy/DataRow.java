@@ -6,6 +6,9 @@ import java.util.Date;
  * Created by popcorny on 4/10/16.
  */
 public interface DataRow {
+
+    DataColumn[] getColumns();
+
     Object get(int index);
 
     Object get(String name);

@@ -1,6 +1,8 @@
 package io.tenmax.poppy.iterators;
 
+import io.tenmax.poppy.DataFrame;
 import io.tenmax.poppy.DataRow;
+import io.tenmax.poppy.dataframes.BaseDataFrame;
 import io.tenmax.poppy.dataframes.ExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,31 +16,33 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ParallelIterator  implements Iterator<DataRow> {
     private static Logger logger = LoggerFactory.getLogger(ParallelIterator.class);
 
-    private final ExecutionContext context;
-    private final Iterator<DataRow>[] iterators;
+    private final BaseDataFrame dataFrame;
+
     private BlockingQueue<Message> queue = new LinkedBlockingQueue<>();
     private int countDown;
     private boolean hasNext;
     private DataRow row;
 
-    public ParallelIterator(ExecutionContext context, Iterator<DataRow>... iterators) {
-        this.context = context;
-        this.iterators = iterators;
-        this.countDown = iterators.length;
+    public ParallelIterator(BaseDataFrame dataFrame) {
+        this.dataFrame = dataFrame;
+        this.countDown = dataFrame.getPartitionCount();
 
         start();
     }
 
     public void start() {
-        ExecutorService executor = Executors.newFixedThreadPool(context.getNumThreads());
+        ExecutorService executor = Executors.newFixedThreadPool(dataFrame.getContext().getNumThreads());
 
-        for (Iterator<DataRow> iter : iterators) {
+        for (int i=0; i<dataFrame.getPartitionCount(); i++) {
+            final int fi = i;
+
             executor.execute(()-> {
                 try {
+                    Iterator<DataRow> iter = dataFrame.getPartition(fi);
                     while (iter.hasNext()) {
                         queue.put(new Message(iter.next()));
 
-                        if(context.isClosed()) {
+                        if(dataFrame.getContext().isClosed()) {
                             break;
                         }
                     }

@@ -14,16 +14,17 @@ public class FilterDataFrame extends BaseDataFrame {
     public FilterDataFrame(BaseDataFrame parent, Predicate<DataRow> predicate) {
         super(parent.context, parent.getColumns());
         this.parent = parent;
+        this.groupedColumns = parent.groupedColumns;
         this.predicate = predicate;
     }
 
     @Override
-    int getPartitionCount() {
+    public int getPartitionCount() {
         return parent.getPartitionCount();
     }
 
     @Override
-    Iterator<DataRow> getPartition(int index) {
+    public Iterator<DataRow> getPartition(int index) {
         return new FilterIterator(parent.getPartition(index));
     }
 

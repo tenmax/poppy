@@ -3,67 +3,26 @@ package io.tenmax.poppy.dataframes;
 import io.tenmax.poppy.DataColumn;
 import io.tenmax.poppy.DataRow;
 import io.tenmax.poppy.DataSource;
-import io.tenmax.poppy.exceptions.ColumnNotFoundException;
-import org.apache.commons.beanutils.PropertyUtils;
 
-import java.beans.PropertyDescriptor;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.function.BiFunction;
 
 public class SourceDataFrame extends BaseDataFrame{
     private final DataSource dataSource;
-    private final BiFunction mapper;
 
     public <T> SourceDataFrame(
-            DataSource<T> dataSource,
-            Class<T> clazz)
+            DataSource<T> dataSource)
     {
-        super(new ExecutionContext(), schemaFromClass(clazz));
+        super(new ExecutionContext(), dataSource.getColumns());
         this.dataSource = dataSource;
-        this.mapper = (data, column) -> {
-            String columnName = (String)column;
-
-            try {
-                return PropertyUtils.getProperty(data, columnName);
-            } catch (Exception e) {
-                throw new ColumnNotFoundException(columnName);
-            }
-        };
-    }
-
-    public <T> SourceDataFrame(
-            DataSource<T> dataSource,
-            DataColumn[] columns,
-            BiFunction<T, String, Object> mapper)
-    {
-        super(new ExecutionContext(), columns);
-        this.dataSource = dataSource;
-        this.mapper = mapper;
-    }
-
-    private static DataColumn[] schemaFromClass(Class clazz) {
-        PropertyDescriptor[] props = PropertyUtils.getPropertyDescriptors(clazz);
-        ArrayList<DataColumn> columns = new ArrayList<>();
-
-        for (PropertyDescriptor prop : props) {
-
-            if(prop.getName().equals("class")) {
-                continue;
-            }
-            columns.add(new DataColumn(prop.getName(), prop.getPropertyType()));
-        }
-
-        return columns.toArray(new DataColumn[0]);
     }
 
     @Override
-    int getPartitionCount() {
+    public int getPartitionCount() {
         return dataSource.getPartitionCount();
     }
 
     @Override
-    Iterator<DataRow> getPartition(int index) {
+    public Iterator<DataRow> getPartition(int index) {
         return new SourceIterator(dataSource.getPartition(index));
     }
 
@@ -85,7 +44,7 @@ public class SourceDataFrame extends BaseDataFrame{
         }
     }
 
-    class SourceDataRow<T> implements DataRow {
+    class SourceDataRow<T> extends BaseDataRow {
         private final T data;
 
         SourceDataRow(T data) {
@@ -99,7 +58,7 @@ public class SourceDataFrame extends BaseDataFrame{
 
         @Override
         public Object get(String name) {
-            return mapper.apply(data, name);
+            return dataSource.get(data, name);
         }
     }
 }

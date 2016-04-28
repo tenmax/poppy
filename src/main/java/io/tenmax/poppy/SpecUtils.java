@@ -117,7 +117,7 @@ public class SpecUtils {
             this.collector = collector;
         }
 
-        AggregateColumnSpec<T> as(String column) {
+        public AggregateColumnSpec<T> as(String column) {
             return new AggregateColumnSpec<>(column, type, collector);
         }
     }

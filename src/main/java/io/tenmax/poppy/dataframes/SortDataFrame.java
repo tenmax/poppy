@@ -23,17 +23,18 @@ public class SortDataFrame extends BaseDataFrame{
         }
 
         this.parent = parent;
+        this.groupedColumns = parent.groupedColumns;
         this.specs = specs;
 
     }
 
     @Override
-    int getPartitionCount() {
+    public int getPartitionCount() {
         return 1;
     }
 
     @Override
-    Iterator<DataRow> getPartition(int index) {
+    public Iterator<DataRow> getPartition(int index) {
         ArrayList<DataRow> rows = new ArrayList<>();
 
         Iterator<DataRow> iterator = parent.iterator();

@@ -4,12 +4,17 @@ package io.tenmax.poppy;
  * Created by popcorny on 4/17/16.
  */
 public class Student {
-    private final int studentId;
-    private final String name;
-    private final int grade;
-    private final int room;
-    private final int height;
-    private final int weight;
+    private int studentId;
+    private String name;
+    private int grade;
+    private int room;
+    private int height;
+    private int weight;
+
+    public Student() {
+    }
+
+
 
     public Student(int studentId, String name, int grade, int room,  int height, int weight) {
         this.studentId = studentId;
@@ -20,6 +25,8 @@ public class Student {
         this.weight = weight;
     }
 
+
+
     public int getStudentId() {
         return studentId;
     }
@@ -28,8 +35,16 @@ public class Student {
         return name;
     }
 
+    public void setGrade(int grade) {
+        this.grade = grade;
+    }
+
     public int getGrade() {
         return grade;
+    }
+
+    public void setRoom(int room) {
+        this.room = room;
     }
 
     public int getRoom() {
@@ -42,5 +57,17 @@ public class Student {
 
     public int getWeight() {
         return weight;
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "studentId=" + studentId +
+                ", name='" + name + '\'' +
+                ", grade=" + grade +
+                ", room=" + room +
+                ", height=" + height +
+                ", weight=" + weight +
+                '}';
     }
 }

@@ -1,8 +1,11 @@
 package io.tenmax.poppy;
 
+import io.tenmax.poppy.datasinks.DebugDataSink;
+import io.tenmax.poppy.datasources.SimpleDataSource;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static io.tenmax.poppy.SpecUtils.*;
@@ -38,8 +41,7 @@ public class DataFrameParallelTest extends TestCase {
         list3.add(new Student(12, "mary",   3,1,170,60));
 
         df= DataFrame.from(
-            new SimpleDataSource<>(list1, list2, list3),
-            Student.class)
+            new SimpleDataSource<>(Student.class,list1, list2, list3))
             .parallel(4);
     }
 
@@ -106,5 +108,50 @@ public class DataFrameParallelTest extends TestCase {
         df
         .distinct("grade", "room")
         .print();
+    }
+
+    public void testTo() throws Exception {
+        TestDataSink sink = new TestDataSink();
+//        df.to(new DebugDataSink());
+        df.to(sink);
+        assertEquals(1, sink.sinkStart.get());
+        assertEquals(1, sink.sinkComplete.get());
+        assertEquals(3, sink.partitionStart.get());
+        assertEquals(12, sink.partitionRow.get());
+        assertEquals(3, sink.partitionComplete.get());
+    }
+
+    class TestDataSink implements DataSink {
+        AtomicInteger sinkStart = new AtomicInteger();
+        AtomicInteger sinkComplete = new AtomicInteger();
+        AtomicInteger partitionStart = new AtomicInteger();
+        AtomicInteger partitionRow = new AtomicInteger();
+        AtomicInteger partitionComplete = new AtomicInteger();
+
+        @Override
+        public void sinkStart(int partitionCount, DataColumn[] columns) {
+            sinkStart.incrementAndGet();
+        }
+
+        @Override
+        public void sinkComplete() {
+            sinkComplete.incrementAndGet();
+
+        }
+
+        @Override
+        public void partitionStart(int partition) {
+            partitionStart.incrementAndGet();
+        }
+
+        @Override
+        public void partitionRow(int partition, DataRow row) {
+            partitionRow.incrementAndGet();
+        }
+
+        @Override
+        public void partitionComplete(int partition) {
+            partitionComplete.incrementAndGet();
+        }
     }
 }

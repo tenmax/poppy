@@ -21,6 +21,7 @@ public class AggregateDataFrame extends  BaseDataFrame{
         this.parent = parent;
         this.specs = specs;
         this.dimSize = parent.groupedColumns.length;
+        this.groupedColumns = parent.groupedColumns;
 
         for (AggregateColumnSpec spec: specs) {
             specsMap.put(spec.getColumn(), spec);
@@ -43,25 +44,30 @@ public class AggregateDataFrame extends  BaseDataFrame{
     }
 
     @Override
-    int getPartitionCount() {
+    public int getPartitionCount() {
         return 1;
     }
 
     @Override
-    Iterator<DataRow> getPartition(int index) {
+    public Iterator<DataRow> getPartition(int index) {
         int count = parent.getPartitionCount();
         HashMap<List, List> result = new HashMap<>();
 
-        for (int i = 0; i < count; i++) {
-            if (parent.context.getNumThreads() == 1) {
-                // sequatial
+
+        if (parent.context.getNumThreads() == 1) {
+            // sequatial
+            for (int i = 0; i < count; i++) {
                 HashMap<List, List> resultPartial = accumulate(parent.getPartition(i));
                 combine(result, resultPartial);
-            } else {
-                // parallel
+            }
+        } else {
+            // parallel
+            ExecutorService executorService = Executors.newFixedThreadPool(parent.context.getNumThreads());
+            ArrayList<CompletableFuture<Void>> futures = new ArrayList<>();
+
+            for (int i = 0; i < count; i++) {
+
                 final int fi = i;
-                ExecutorService executorService = Executors.newFixedThreadPool(parent.context.getNumThreads());
-                ArrayList<CompletableFuture<Void>> futures = new ArrayList<>();
 
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                     HashMap<List, List> resultPartial = accumulate(parent.getPartition(fi));
@@ -71,11 +77,11 @@ public class AggregateDataFrame extends  BaseDataFrame{
                 }, executorService);
 
                 futures.add(future);
-                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-
-                // shutdown the executor while all tasks complete
-                executorService.shutdown();
             }
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+            // shutdown the executor while all tasks complete
+            executorService.shutdown();
         }
 
         HashMap<List, List> finalResult = finish(result);
@@ -168,7 +174,7 @@ public class AggregateDataFrame extends  BaseDataFrame{
         }
     }
 
-    class AggregateDataRow implements DataRow{
+    class AggregateDataRow extends BaseDataRow{
         private Map.Entry<List, List> entry;
 
         AggregateDataRow(Map.Entry<List, List> entry) {
@@ -183,11 +189,5 @@ public class AggregateDataFrame extends  BaseDataFrame{
                 return entry.getValue().get(index - dimSize);
             }
         }
-
-        @Override
-        public Object get(String name) {
-            return get(columnsMap.get(name));
-        }
-
     }
 }

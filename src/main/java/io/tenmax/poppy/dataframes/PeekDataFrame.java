@@ -12,16 +12,17 @@ public class PeekDataFrame extends BaseDataFrame {
     public PeekDataFrame(BaseDataFrame parent, Consumer<DataRow> consumer) {
         super(parent.context, parent.getColumns());
         this.parent = parent;
+        this.groupedColumns = parent.groupedColumns;
         this.consumer = consumer;
     }
 
     @Override
-    int getPartitionCount() {
+    public int getPartitionCount() {
         return parent.getPartitionCount();
     }
 
     @Override
-    Iterator<DataRow> getPartition(int index) {
+    public Iterator<DataRow> getPartition(int index) {
         return new PeekIterator(parent.getPartition(index));
     }
 

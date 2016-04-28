@@ -4,6 +4,8 @@ import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.tenmax.poppy.SpecUtils.*;
@@ -139,6 +141,61 @@ public class DataFrameTest extends TestCase {
         assertEquals(3, it.next().getInteger("room"));
         assertEquals(4, it.next().getInteger("room"));
         assertEquals(false, it.hasNext());
+    }
+
+    public void testCache() throws Exception {
+        RandomAccessDataFrame cache = DataFrame.from(list, Student.class)
+                .cache();
+
+        assertEquals(4, cache.size());
+        assertEquals(2, cache.getRow(1).getInteger("studentId"));
+        assertEquals(80, cache.getRow(2).getInteger("weight"));
+        assertEquals("john", cache.getRow(3).getString("name"));
+    }
+
+
+
+    public void testToList() throws Exception {
+        List<StudentReport> studentReports =
+        DataFrame
+        .from(list, Student.class)
+        .groupby("grade", "room")
+        .aggregate(
+                avgLong("weight").as("weight"),
+                avgLong("height").as("height"))
+        .sort("grade", "room")
+        .toList(StudentReport.class);
+
+        StudentReport report = studentReports.get(0);
+        assertEquals(5, report.getGrade());
+        assertEquals(2, report.getRoom());
+        assertEquals(60.0, report.getWeight(),0.1);
+        assertEquals(170.0, report.getHeight(),0.1);
+
+    }
+
+    public void testToMap() throws Exception {
+
+        Map<GradeRoom, StudentReport> reportMap =
+        DataFrame
+        .from(list, Student.class)
+        .groupby("grade", "room")
+        .aggregate(
+                avgLong("weight").as("weight"),
+                sumLong("weight").as("weightTotal"),
+                avgLong("height").as("height"),
+                sumLong("height").as("heightTotal"))
+        .sort("grade", "room")
+        .toMap(GradeRoom.class, StudentReport.class);
+
+        reportMap.forEach((key, value) -> {
+            System.out.println(key);
+            System.out.println(value);
+        });
+
+        assertEquals(reportMap.get(new GradeRoom(5,2)).getWeight(), 60.0);
+        assertEquals(reportMap.get(new GradeRoom(5,3)).getHeight(), 175.0);
+        assertEquals(reportMap.get(new GradeRoom(5,4)).getHeight(), 164.0);
     }
 
 

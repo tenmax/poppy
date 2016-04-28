@@ -82,12 +82,12 @@ public class ProjectDataFrame extends BaseDataFrame {
     }
 
     @Override
-    int getPartitionCount() {
+    public int getPartitionCount() {
         return parent.getPartitionCount();
     }
 
     @Override
-    Iterator<DataRow> getPartition(int index) {
+    public Iterator<DataRow> getPartition(int index) {
         return new ProjectIterator(parent.getPartition(index));
     }
 
@@ -109,7 +109,7 @@ public class ProjectDataFrame extends BaseDataFrame {
         }
     }
 
-    class ProjectDataRow implements DataRow {
+    class ProjectDataRow extends BaseDataRow {
         private DataRow row;
 
         ProjectDataRow(DataRow row) {
@@ -119,16 +119,6 @@ public class ProjectDataFrame extends BaseDataFrame {
         @Override
         public Object get(int index) {
             ProjectColumnSpec spec = specs[index];
-            if (spec.getMapper() != null) {
-                return spec.getMapper().apply(row);
-            } else {
-                return row.get(spec.getColumn());
-            }
-        }
-
-        @Override
-        public Object get(String name) {
-            ProjectColumnSpec spec = specsMap.get(name);
             if (spec.getMapper() != null) {
                 return spec.getMapper().apply(row);
             } else {

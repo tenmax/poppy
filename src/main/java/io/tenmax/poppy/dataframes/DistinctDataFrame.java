@@ -27,12 +27,12 @@ public class DistinctDataFrame extends BaseDataFrame {
     }
 
     @Override
-    int getPartitionCount() {
+    public int getPartitionCount() {
         return 1;
     }
 
     @Override
-    Iterator<DataRow> getPartition(int index) {
+    public Iterator<DataRow> getPartition(int index) {
         return new DistinctIterator(parent.iterator());
     }
 
@@ -88,21 +88,19 @@ public class DistinctDataFrame extends BaseDataFrame {
         }
     }
 
-    class DistinctDataRow implements DataRow {
+    class DistinctDataRow extends BaseDataRow {
+
         private List value;
 
         DistinctDataRow(List value) {
             this.value = value;
         }
 
+
         @Override
         public Object get(int index) {
             return value.get(index);
         }
 
-        @Override
-        public Object get(String name) {
-            return value.get(columnsMap.get(name));
-        }
     }
 }
