@@ -1,5 +1,5 @@
 # Poppy
-*poppy* is dataframe library for java. It provides common SQL operations (e.g. select, from, where, group by, order by, distinct) to process data in java.
+*poppy* is dataframe library for java, which provides common SQL operations (e.g. select, from, where, group by, order by, distinct) to process data in java.
 
 Unlike other dataframe libraries, which keep all the data in memory, *poppy* process data in streaming manager. That is, it is more similar as [Java8 Stream library](https://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html), but relational version.
 
@@ -21,13 +21,16 @@ In SQL, we have a query like this
 
 ```sql
 select 
-grade, room, avg(weight) as weight, avg(height) as height
+    grade, 
+    room, 
+    avg(weight) as weight, 
+    avg(height) as height
 from Student
 group by grade, room
 order by grade, room
 ```
 
-Here is the corresponding code in *poppy*
+Here is the *Poppy*'s version 
 
 ```java
 List<Student> students = ...;
@@ -70,12 +73,13 @@ compile 'io.tenmax:poppy:0.1.0'
 ## Features
 
 1. Support the most common operations in SQL. e.g. select, from, where, group by, order by, distinct
-2. Support the most common aggregation functions in SQL. e.g. *avg()*, *sum()*
+2. Support the most common aggregation functions in SQL. e.g. *avg()*, *sum()*, *count()*, *min()*, *max()*
 3. **Custom aggregation functions.** by  [java.util.stream.Collector](https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html)
 4. **Partition support.** Partition is the unit of parallelism. Multiple partitions allow you processing data concurrently.
-5. **Multi-threaded support.** No matter for IO-bound or CPU-bound tasks,  multi-threaded processing leverage all your CPU resources.
+5. **Multi-threaded support**. For CPU-bound jobs, it leverages all your CPU resources for better performance; for IO-bound jobs, it reduces the waiting time, and take adventages of better concurrency.
 6. Suitable for both **batch** and **streaming** scenario.
-
+7. **Lightweight**. Comparing to [Spark DataFrame API](https://spark.apache.org/docs/latest/sql-programming-guide.html), it is much more lightweight to embed in your application.
+8. **Stream-based design**. Comparing to [joinery](https://github.com/cardillo/joinery), which keeps the whole data in memory. *Poppy*'s streaming behaviour allows limited memory to process huge volume of data.
 
 ## Documentation
 
@@ -89,7 +93,7 @@ There are two kinds of input.
 1. DataFrame.from(Class\<T> clazz, java.util.Iterable... iterables)
 2. DataFrame.from(io.tenmax.DataSource dataSource)
 
-The first one uses JavaBean convention to define the table schema. This is the simplest way to create a dataframe
+The first one uses [JavaBean Conventions](https://en.wikipedia.org/wiki/JavaBeans) to define the table schema. This is the simplest way to create a dataframe
 
 ```
 List<Student> students = ...;
@@ -97,9 +101,9 @@ List<Student> students = ...;
 DataFrame df = DataFrame.from(Student.class, students);
 ```
 
-The second one allow you most flexible way to define the data source. In data source, it should define 
+The second one allows you most flexible way to define the data source. In data source, it should define 
 
-1. The schema (by a list of column)
+1. The schema (by a list of columns)
 2. Partition count
 3. The iterators for specified partition
 4. The mapping from one data to data in all columns.
@@ -120,16 +124,16 @@ There are several ways to output the data
 4. toMap
 5. DataFrame.to(DataSink dataSink)
 
-The first two methods overriding the *java.util.Iterable* iterface. So you can use `for(T t: dataFrame)` to iterate through the dataframe.
+The first two methods are provided from *java.util.Iterable* interface. So you can use `for(T t: dataFrame)` to iterate through the dataframe.
 
-`toList` and `toMap` provide a quick methods to output dataframe to a collection. Both provide the reflection version, which export the data by the JavaBean conversion. `toMap` ues the `groupby` method to define the key of map.
+`toList` and `toMap` provide quick methods to output dataframe to collections. Both provide the list version and reflection version. The later exports the data by the [JavaBean conventions](https://en.wikipedia.org/wiki/JavaBeans). `toMap` method should define grouping columns by `groupby` method to define the key of map.
 
-The latest version provide the most flexible version of output. It also allow output the result directly in the multi-threaded context. It offers the best level of parallel to output the data to destination, just like Hadoop does.
+The latest version provides the most flexible version of output. Th results are called back directly in the multi-threaded context, offering the best level of parallelism to output the results to destination, just like Hadoop does.
 
 # Operations
 
 ## Project
-Project is the same as `select` in SQL. Project map one column to another name, or merge multiple columns to one column. We use SQL statement as analogy example.
+Project is the same as `select` in SQL. Project maps one column to another name, or merges multiple columns to one column. In the following example, we use SQL as analogy to explain each operation.
 
 *SQL*
 
@@ -143,7 +147,7 @@ select name, weight, height from student;
 df.project("name", "weight", "height");
 ```
 
-Another example is to aliasing a name to a column.
+Another example is to alias a name to a column.
 
 *SQL*
 
@@ -167,7 +171,7 @@ df.project(
 ```
 
 ## Filter
-Filter is the same as `where` or `having` in SQL. Filter is used to keep the row which passes the rule.
+Filter is the same as `where` or `having` in SQL. Filter is used to keep the rows which pass the rule.
 
 *SQL*
 
@@ -203,7 +207,9 @@ df.aggregate(
 );
 ```
 
-You can have your custom aggregation by Java8 [Collector](https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html) interface.
+You can define custom aggregation by Java8 [Collector](https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html) interface.
+
+*Poppy*
 
 ```java
 df.aggregate(
@@ -211,9 +217,9 @@ df.aggregate(
 )
 ```
 
-Of course, poppy support aggregate with grouping.
+Of course, poppy supports aggregate with grouping.
 
-
+*SQL*
 ```sql
 select 
     grade, 
@@ -223,8 +229,7 @@ select
 from Student
 group by grade, room
 ```
-
-Here is the corresponding code in *poppy*
+*Poppy*
 
 ```java
 df
@@ -298,7 +303,7 @@ DataFrame
 
 ## Execution Context
 
-*Poppy* introduces the concept of execution context. One execution context contains a thread pool with *n* threads and *m* partitions. It treat one partition as a task, and one thread only proceeds task at the same time. Internally, it make the projection, filtering, accumulation of aggregation as a pipeline. Once all tasks complete, the thread pool shutdown and release all the resources. 
+*Poppy* introduces the concept of execution context. One execution context contains a thread pool with *n* threads and *m* partitions. It treat one partition as a task, and one thread only processses task at the same time. Internally, it make the projection, filtering, accumulation of aggregation as a pipeline. Once all tasks complete, the thread pool shutdown and release all the resources. 
 
 The following diagram is an example of multiple partition with 3 threads in pool. And the final results would pipe the result to the queue and be pulled by the caller thread. 
 
