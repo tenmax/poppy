@@ -37,7 +37,11 @@ public class AggregateDataFrame extends  BaseDataFrame{
         }
 
         for (AggregateColumnSpec spec : specs) {
-            dataColumns[i++] = new DataColumn(spec.getColumn(), spec.getType());
+            if (spec.getType() != null) {
+                dataColumns[i++] = new DataColumn(spec.getColumn(), spec.getType());
+            } else {
+                dataColumns[i++] = new DataColumn(spec.getColumn(), parent.getColumn(spec.getTypeFromColumn()).getType());
+            }
         }
 
         return  dataColumns;

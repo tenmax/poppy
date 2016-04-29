@@ -1,6 +1,8 @@
 package io.tenmax.poppy;
 
+import java.util.Comparator;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -73,43 +75,37 @@ public class SpecUtils {
                 Collectors.counting());
     }
 
+    public static AggregateColumnSpecBuilder min(String columnRef) {
+        Function<DataRow, ?> mapper = row -> row.get(columnRef);
+        Comparator comparator = Comparator.naturalOrder();
+        Collector<?,?,Optional<?>> collector = Collectors
+                .<DataRow,Object,Object,Object>mapping(mapper, Collectors.minBy(comparator));
+        Collector collector2 = Collectors.collectingAndThen(collector, (opt) -> opt.orElse(null));
+
+        return new AggregateColumnSpecBuilder(columnRef,collector2);
+    }
+
+    public static AggregateColumnSpecBuilder max(String columnRef) {
+        Function<DataRow, ?> mapper = row -> row.get(columnRef);
+        Comparator comparator = Comparator.naturalOrder();
+        Collector<?,?,Optional<?>> collector = Collectors
+                .<DataRow,Object,Object,Object>mapping(mapper, Collectors.maxBy(comparator));
+        Collector collector2 = Collectors.collectingAndThen(collector, (opt) -> opt.orElse(null));
+
+        return new AggregateColumnSpecBuilder(columnRef,collector2);
+
+    }
+
     public static <T, A, R> AggregateColumnSpecBuilder aggreMap(String columnRef, Class<R> type, Collector<T,A,R> collector) {
-        Collector<DataRow, A, R> newCollector = new Collector<DataRow, A, R>() {
-            @Override
-            public Supplier<A> supplier() {
-                return collector.supplier();
-            }
-
-            @Override
-            public BiConsumer<A, DataRow> accumulator() {
-                return (a, row) -> {
-                    T value = (T)row.get(columnRef);
-                    collector.accumulator().accept(a, value);
-                };
-            }
-
-            @Override
-            public BinaryOperator<A> combiner() {
-                return collector.combiner();
-            }
-
-            @Override
-            public Function<A, R> finisher() {
-                return collector.finisher();
-            }
-
-            @Override
-            public Set<Characteristics> characteristics() {
-                return collector.characteristics();
-            }
-        };
-
+        Function<DataRow, T> mapper = row -> (T)row.get(columnRef);
+        Collector<DataRow, ?, R> newCollector = Collectors.mapping(mapper, collector);
         return new AggregateColumnSpecBuilder(type,newCollector);
     }
 
 
     public static class AggregateColumnSpecBuilder<T> {
         private Class<T> type;
+        private String typeFromColumn;
         private Collector<DataRow, ?, T> collector;
 
         public AggregateColumnSpecBuilder(Class<T> type, Collector<DataRow, ?, T> collector) {
@@ -117,8 +113,21 @@ public class SpecUtils {
             this.collector = collector;
         }
 
+        public AggregateColumnSpecBuilder(String typeFromColumn, Collector<DataRow, ?, T> collector) {
+            this.typeFromColumn = typeFromColumn;
+            this.collector = collector;
+        }
+
         public AggregateColumnSpec<T> as(String column) {
-            return new AggregateColumnSpec<>(column, type, collector);
+            if (type != null) {
+                return new AggregateColumnSpec<>(column, type, collector);
+            }
+
+            if (typeFromColumn != null) {
+                return new AggregateColumnSpec<T>(column, typeFromColumn, collector);
+            }
+
+            throw new IllegalStateException("type and typeFromColumn not defined");
         }
     }
 

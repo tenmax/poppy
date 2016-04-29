@@ -36,6 +36,11 @@ public class SequantialIterator implements Iterator<DataRow> {
 
     @Override
     public DataRow next() {
+        if (iterator == null) {
+            if (!hasNext()) {
+                return null;
+            }
+        }
         return iterator.next();
     }
 }

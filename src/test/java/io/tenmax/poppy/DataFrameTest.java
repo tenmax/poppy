@@ -76,18 +76,23 @@ public class DataFrameTest extends TestCase {
     }
 
     public void testAggre() throws Exception {
-        Iterator<DataRow> it = DataFrame
+        Iterator<DataRow> it =
+        DataFrame
         .from(list, Student.class)
         .aggregate(
-                avgLong("weight").as("weight"),
-                avgLong("height").as("height"),
+                sumLong("height").as("sum"),
+                avgLong("height").as("avg"),
+                min("height").as("min"),
+                max("height").as("max"),
                 count().as("count"),
                 aggreMap("weight", Integer.class, Collectors.summingInt((Integer i) -> i)).as("wi"))
-                .iterator();
+        .iterator();
 
         DataRow row = it.next();
-        assertEquals(row.getDouble("weight"), 67.5, 0.1);
-        assertEquals(row.getDouble("height"), 168.25, 0.1);
+        assertEquals(row.getLong("sum"), 673);
+        assertEquals(row.getDouble("avg"), 168.25, 0.1);
+        assertEquals(row.getInteger("min"), 160);
+        assertEquals(row.getInteger("max"), 175);
         assertEquals(row.getLong("count"), 4);
         assertEquals(row.getInteger("wi"), 270);
     }
