@@ -1,0 +1,6 @@
+io.tenmax.poppy
+io.tenmax.poppy.dataframes
+io.tenmax.poppy.datasinks
+io.tenmax.poppy.datasources
+io.tenmax.poppy.exceptions
+io.tenmax.poppy.iterators
