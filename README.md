@@ -36,7 +36,7 @@ Here is the *Poppy*'s version
 List<Student> students = ...;
 
 DataFrame
-.from(Student.class, students)
+.from(students, Student.class)
 .groupby("grade", "room")
 .aggregate(
     avgLong("weight").as("weight"),
