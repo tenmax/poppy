@@ -74,18 +74,26 @@ public class AggregateDataFrame extends  BaseDataFrame{
                 final int fi = i;
 
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                    HashMap<List, List> resultPartial = accumulate(parent.getPartition(fi));
-                    synchronized (result) {
-                        combine(result, resultPartial);
+                    try {
+                        HashMap<List, List> resultPartial = accumulate(parent.getPartition(fi));
+                        synchronized (result) {
+                            combine(result, resultPartial);
+                        }
+                    } catch (Exception e) {
+                        throw e;
                     }
                 }, executorService);
 
                 futures.add(future);
             }
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-            // shutdown the executor while all tasks complete
-            executorService.shutdown();
+            try {
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+            } finally {
+                // shutdown the executor while all tasks complete
+                executorService.shutdown();
+            }
+
         }
 
         HashMap<List, List> finalResult = finish(result);
