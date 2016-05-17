@@ -1,11 +1,9 @@
 package io.tenmax.poppy;
 
 import java.util.Date;
+import java.util.Iterator;
 
-/**
- * Created by popcorny on 4/10/16.
- */
-public interface DataRow {
+public interface DataRow extends Iterable {
 
     DataColumn[] getColumns();
 
@@ -67,5 +65,23 @@ public interface DataRow {
 
     default Date getDate(String name) {
         return ((Date) get(name));
+    }
+
+    default
+    Iterator iterator() {
+        return new Iterator() {
+            private int i = 0;
+            private int n = getColumns().length;
+
+            @Override
+            public boolean hasNext() {
+                return i < n;
+            }
+
+            @Override
+            public Object next() {
+                return get(i++);
+            }
+        };
     }
 }

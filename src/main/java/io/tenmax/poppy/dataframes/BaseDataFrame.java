@@ -131,9 +131,10 @@ abstract public class BaseDataFrame implements DataFrame{
         System.out.println();
 
         forEach((row) -> {
-            for (int i = 0; i < columns.length; i++) {
-                System.out.printf("%s\t", row.get(i));
+            for (Object o : row) {
+                System.out.printf("%s\t", o);
             }
+
             System.out.println();
         });
     }
