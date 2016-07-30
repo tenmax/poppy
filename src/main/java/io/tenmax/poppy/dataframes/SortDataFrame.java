@@ -53,6 +53,18 @@ public class SortDataFrame extends BaseDataFrame{
                 Comparable v1 = (Comparable)row1.get(spec.getColumn());
                 Comparable v2 = (Comparable)row2.get(spec.getColumn());
 
+                if (v1 == null || v2 == null) {
+                    if (v1 == null) {
+                        if (v2 != null) {
+                            return -1;
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        return 1;
+                    }
+                }
+
                 if (v1.compareTo(v2) == 0) {
                     continue;
                 }

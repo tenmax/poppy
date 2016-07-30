@@ -22,7 +22,7 @@ public class DataFrameTest extends TestCase {
         list.add(new Student(1, "pop", 5,2,170,60));
         list.add(new Student(2, "foo", 5,3,175,70));
         list.add(new Student(3, "bar", 5,4,168,80));
-        list.add(new Student(4, "john", 5,4,160,60));
+        list.add(new Student(4, null, 5,4,160,60));
     }
 
     public void testBasic() throws Exception {
@@ -136,6 +136,18 @@ public class DataFrameTest extends TestCase {
         assertEquals(3, it.next().getInteger("studentId"));
     }
 
+    public void testSortWithNull() throws Exception {
+        Iterator<DataRow> it = DataFrame
+                .from(list, Student.class)
+                .sort(asc("name"))
+                .iterator();
+
+        assertEquals(4, it.next().getInteger("studentId"));
+        assertEquals(3, it.next().getInteger("studentId"));
+        assertEquals(2, it.next().getInteger("studentId"));
+        assertEquals(1, it.next().getInteger("studentId"));
+    }
+
     public void testDistinct() throws Exception {
         Iterator<DataRow> it = DataFrame
         .from(list, Student.class)
@@ -155,7 +167,7 @@ public class DataFrameTest extends TestCase {
         assertEquals(4, cache.size());
         assertEquals(2, cache.getRow(1).getInteger("studentId"));
         assertEquals(80, cache.getRow(2).getInteger("weight"));
-        assertEquals("john", cache.getRow(3).getString("name"));
+        assertEquals(null, cache.getRow(3).getString("name"));
     }
 
 
