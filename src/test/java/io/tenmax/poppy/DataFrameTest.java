@@ -97,6 +97,20 @@ public class DataFrameTest extends TestCase {
         assertEquals(row.getInteger("wi"), 270);
     }
 
+    public void testCountWithNull() throws Exception {
+        Iterator<DataRow> it =
+        DataFrame
+        .from(list, Student.class)
+        .aggregate(
+                count().as("count"),
+                count("name").as("countName"))
+        .iterator();
+
+        DataRow row = it.next();
+        assertEquals(row.getLong("count"), 4);
+        assertEquals(row.getLong("countName"), 3);
+    }
+
     public void testGroupBy() throws Exception {
         Iterator<DataRow> it = DataFrame
         .from(list, Student.class)

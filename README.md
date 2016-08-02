@@ -54,13 +54,15 @@ Java 8 or higher
 
 ## Dependency
 
+Poppy's package is managed by [JCenter](https://bintray.com/bintray/jcenter) repository.
+
 Maven
 
 ```
 <dependency>
   <groupId>io.tenmax</groupId>
   <artifactId>poppy</artifactId>
-  <version>0.1.4</version>
+  <version>0.1.5</version>
   <type>pom</type>
 </dependency>
 ```
@@ -68,7 +70,7 @@ Maven
 Gradle
 
 ```
-compile 'io.tenmax:poppy:0.1.4'
+compile 'io.tenmax:poppy:0.1.5'
 ```
 ## Features
 

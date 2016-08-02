@@ -75,6 +75,12 @@ public class SpecUtils {
                 Collectors.counting());
     }
 
+    public static AggregateColumnSpecBuilder count(String columnRef) {
+        return new AggregateColumnSpecBuilder(
+                Long.class,
+                Collectors.summingLong((DataRow row) -> row.get(columnRef) != null ? 1 : 0));
+    }
+
     public static AggregateColumnSpecBuilder min(String columnRef) {
         Function<DataRow, ?> mapper = row -> row.get(columnRef);
         Comparator comparator = Comparator.naturalOrder();
