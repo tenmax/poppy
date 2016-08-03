@@ -39,7 +39,7 @@ public class SpecUtils {
             this.mapper = mapper;
         }
 
-        ProjectColumnSpec<T> as(String column) {
+        public ProjectColumnSpec<T> as(String column) {
             return new ProjectColumnSpec<>(column, type, mapper);
         }
     }
