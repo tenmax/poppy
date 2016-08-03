@@ -62,7 +62,7 @@ Maven
 <dependency>
   <groupId>io.tenmax</groupId>
   <artifactId>poppy</artifactId>
-  <version>0.1.5</version>
+  <version>0.1.6</version>
   <type>pom</type>
 </dependency>
 ```
@@ -70,7 +70,7 @@ Maven
 Gradle
 
 ```
-compile 'io.tenmax:poppy:0.1.5'
+compile 'io.tenmax:poppy:0.1.6'
 ```
 ## Features
 

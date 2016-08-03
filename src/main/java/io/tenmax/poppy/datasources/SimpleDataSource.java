@@ -1,12 +1,5 @@
 package io.tenmax.poppy.datasources;
 
-import io.tenmax.poppy.DataColumn;
-import io.tenmax.poppy.DataSource;
-import io.tenmax.poppy.exceptions.ColumnNotFoundException;
-import org.apache.commons.beanutils.PropertyUtils;
-
-import java.beans.PropertyDescriptor;
-import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
@@ -15,13 +8,12 @@ import java.util.Iterator;
  *
  * @param <T> The source data type.
  */
-public class SimpleDataSource<T> implements DataSource<T> {
+public class SimpleDataSource<T> extends ReflectionDataSource<T> {
     private final Iterable<T>[] iterables;
-    private final DataColumn[] columns;
 
     public SimpleDataSource(Class<T> clazz, Iterable<T>... iterables) {
+        super(clazz);
         this.iterables = iterables;
-        this.columns = schemaFromClass(clazz);
     }
 
     @Override
@@ -32,33 +24,5 @@ public class SimpleDataSource<T> implements DataSource<T> {
     @Override
     public Iterator<T> getPartition(int index) {
         return iterables[index].iterator();
-    }
-
-    @Override
-    public DataColumn[] getColumns() {
-        return columns;
-    }
-
-    @Override
-    public Object get(T data, String columnName) {
-        try {
-            return PropertyUtils.getProperty(data, columnName);
-        } catch (Exception e) {
-            throw new ColumnNotFoundException(columnName);
-        }
-    };
-
-    private static DataColumn[] schemaFromClass(Class clazz) {
-        PropertyDescriptor[] props = PropertyUtils.getPropertyDescriptors(clazz);
-        ArrayList<DataColumn> columns = new ArrayList<>();
-
-        for (PropertyDescriptor prop : props) {
-            if(prop.getName().equals("class")) {
-                continue;
-            }
-            columns.add(new DataColumn(prop.getName(), prop.getPropertyType()));
-        }
-
-        return columns.toArray(new DataColumn[0]);
     }
 }
