@@ -3,6 +3,8 @@ package io.tenmax.poppy;
 import io.tenmax.poppy.datasinks.DebugDataSink;
 import io.tenmax.poppy.datasources.SimpleDataSource;
 import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -10,14 +12,16 @@ import java.util.stream.Collectors;
 
 import static io.tenmax.poppy.SpecUtils.*;
 import static io.tenmax.poppy.SpecUtils.desc;
+import static org.junit.Assert.assertEquals;
 
-public class DataFrameParallelTest extends TestCase {
+
+public class DataFrameParallelTest {
 
     private DataFrame df;
 
-    @Override
+
+    @Before
     public void setUp() throws Exception {
-        super.setUp();
 
         ArrayList<Student> list1 = new ArrayList<>();
         ArrayList<Student> list2 = new ArrayList<>();
@@ -45,17 +49,20 @@ public class DataFrameParallelTest extends TestCase {
             .parallel(4);
     }
 
+    @Test
     public void testBasic() throws Exception {
         df
         .print();
     }
 
+    @Test
     public void testProject() throws Exception {
         df
         .project("name", "weight", "height")
         .print();
     }
 
+    @Test
     public void testProject2() throws Exception {
         df
         .project(
@@ -65,6 +72,7 @@ public class DataFrameParallelTest extends TestCase {
         .print();
     }
 
+    @Test
     public void testFilter() throws Exception {
         df
         .filter(row -> row.getInteger("height") >= 170)
@@ -72,6 +80,7 @@ public class DataFrameParallelTest extends TestCase {
         .print();
     }
 
+    @Test
     public void testAggre() throws Exception {
         df
         .aggregate(
@@ -82,6 +91,7 @@ public class DataFrameParallelTest extends TestCase {
         .print();
     }
 
+    @Test
     public void testGroupBy() throws Exception {
         df
         .groupby("grade", "room")
@@ -92,24 +102,28 @@ public class DataFrameParallelTest extends TestCase {
         .print();
     }
 
+    @Test
     public void testSort() throws Exception {
         df
         .sort("weight", "height")
         .print();
     }
 
+    @Test
     public void testSort2() throws Exception {
         df
         .sort(asc("weight"), desc("height"))
         .print();
     }
 
+    @Test
     public void testDistinct() throws Exception {
         df
         .distinct("grade", "room")
         .print();
     }
 
+    @Test
     public void testTo() throws Exception {
         TestDataSink sink = new TestDataSink();
 //        df.to(new DebugDataSink());
