@@ -82,8 +82,6 @@
 <h2>
 <a id="dependency" class="anchor" href="#dependency" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Dependency</h2>
 
-<p>Poppy's package is managed by <a href="https://bintray.com/bintray/jcenter">JCenter</a> repository.</p>
-
 <p>Maven</p>
 
 <pre><code>&lt;dependency&gt;
@@ -123,15 +121,226 @@
 <h2>
 <a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Documentation</h2>
 
-<ul>
-<li><a href="http://tenmax.github.io/poppy/docs/javadoc/index.html">JavaDoc</a></li>
-<li><a href="http://tenmax.github.io/poppy/">User Manual</a></li>
-</ul>
+<p><a href="docs/javadoc/index.html">JavaDoc</a></p>
 
 <h1>
-<a id="contribution" class="anchor" href="#contribution" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contribution</h1>
+<a id="input" class="anchor" href="#input" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Input</h1>
 
-<p>Please fork this project and pull request to me and any comment would be appreciated!</p>
+<p>There are two kinds of input.</p>
+
+<ol>
+<li>DataFrame.from(Class&lt;T&gt; clazz, java.util.Iterable... iterables)</li>
+<li>DataFrame.from(io.tenmax.DataSource dataSource)</li>
+</ol>
+
+<p>The first one uses <a href="https://en.wikipedia.org/wiki/JavaBeans">JavaBean Conventions</a> to define the table schema. This is the simplest way to create a dataframe</p>
+
+<pre><code>List&lt;Student&gt; students = ...;
+
+DataFrame df = DataFrame.from(Student.class, students);
+</code></pre>
+
+<p>The second one allows you most flexible way to define the data source. In data source, it should define </p>
+
+<ol>
+<li>The schema (by a list of columns)</li>
+<li>Partition count</li>
+<li>The iterators for specified partition</li>
+<li>The mapping from one data to data in all columns.</li>
+</ol>
+
+<pre><code>DataSource dataSource = ...
+
+DataFrame df = DataFrame.from(dataSource);
+</code></pre>
+
+<h1>
+<a id="output" class="anchor" href="#output" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Output</h1>
+
+<p>There are several ways to output the data</p>
+
+<ol>
+<li>Iterator</li>
+<li>forEach</li>
+<li>toList</li>
+<li>toMap</li>
+<li>DataFrame.to(DataSink dataSink)</li>
+</ol>
+
+<p>The first two methods are provided from <em>java.util.Iterable</em> interface. So you can use <code>for(T t: dataFrame)</code> to iterate through the dataframe.</p>
+
+<p><code>toList</code> and <code>toMap</code> provide quick methods to output dataframe to collections. Both provide the list version and reflection version. The later exports the data by the <a href="https://en.wikipedia.org/wiki/JavaBeans">JavaBean conventions</a>. <code>toMap</code> method should define grouping columns by <code>groupby</code> method to define the key of map.</p>
+
+<p>The latest version provides the most flexible version of output. Th results are called back directly in the multi-threaded context, offering the best level of parallelism to output the results to destination, just like Hadoop does.</p>
+
+<h1>
+<a id="operations" class="anchor" href="#operations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Operations</h1>
+
+<h2>
+<a id="project" class="anchor" href="#project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Project</h2>
+
+<p>Project is the same as <code>select</code> in SQL. Project maps one column to another name, or merges multiple columns to one column. In the following example, we use SQL as analogy to explain each operation.</p>
+
+<p><em>SQL</em></p>
+
+<div class="highlight highlight-source-sql"><pre><span class="pl-k">select</span> name, weight, height <span class="pl-k">from</span> student;</pre></div>
+
+<p><em>Poppy</em></p>
+
+<div class="highlight highlight-source-java"><pre>df<span class="pl-k">.</span>project(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>);</pre></div>
+
+<p>Another example is to alias a name to a column.</p>
+
+<p><em>SQL</em></p>
+
+<div class="highlight highlight-source-sql"><pre><span class="pl-k">select</span> 
+    name, 
+    weight <span class="pl-k">as</span> w, 
+    height <span class="pl-k">/</span> <span class="pl-c1">10</span> <span class="pl-k">as</span> h
+<span class="pl-k">from</span> student;</pre></div>
+
+<p><em>Poppy</em></p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">import static</span> <span class="pl-smi">io.tenmax.poppy.SpecUtils.*</span>;
+
+df<span class="pl-k">.</span>project(
+   col(<span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span>),
+   colMap(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>w<span class="pl-pds">"</span></span>),
+   colMap(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>, <span class="pl-smi">Float</span><span class="pl-k">.</span>class, (<span class="pl-smi">Integer</span> height) <span class="pl-k">-</span><span class="pl-k">&gt;</span> (height <span class="pl-k">/</span> <span class="pl-c1">10f</span>))<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>h<span class="pl-pds">"</span></span>))</pre></div>
+
+<h2>
+<a id="filter" class="anchor" href="#filter" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Filter</h2>
+
+<p>Filter is the same as <code>where</code> or <code>having</code> in SQL. Filter is used to keep the rows which pass the rule.</p>
+
+<p><em>SQL</em></p>
+
+<div class="highlight highlight-source-sql"><pre><span class="pl-k">select</span> <span class="pl-k">*</span> <span class="pl-k">from</span> Student <span class="pl-k">where</span> height <span class="pl-k">&gt;</span> <span class="pl-c1">170</span>;</pre></div>
+
+<p><em>Poppy</em></p>
+
+<div class="highlight highlight-source-java"><pre>df<span class="pl-k">.</span>filter(row <span class="pl-k">-</span><span class="pl-k">&gt;</span> row<span class="pl-k">.</span>getInteger(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>) <span class="pl-k">&gt;=</span> <span class="pl-c1">170</span>);</pre></div>
+
+<h2>
+<a id="aggregation" class="anchor" href="#aggregation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Aggregation</h2>
+
+<p><em>SQL</em></p>
+
+<div class="highlight highlight-source-sql"><pre><span class="pl-k">select</span> 
+    <span class="pl-c1">count</span>(<span class="pl-k">*</span>) <span class="pl-k">as</span> c,
+    <span class="pl-c1">avg</span>(weight) <span class="pl-k">as</span> weight,
+    <span class="pl-c1">avg</span>(height) <span class="pl-k">as</span> height
+<span class="pl-k">from</span> Student;</pre></div>
+
+<p><em>Poppy</em></p>
+
+<div class="highlight highlight-source-java"><pre>df<span class="pl-k">.</span>aggregate(
+    count()<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>c<span class="pl-pds">"</span></span>)
+    avgLong(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>),
+    avgLong(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>)
+);</pre></div>
+
+<p>You can define custom aggregation by Java8 <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collector.html">Collector</a> interface.</p>
+
+<p><em>Poppy</em></p>
+
+<div class="highlight highlight-source-java"><pre>df<span class="pl-k">.</span>aggregate(
+    aggreMap(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>, <span class="pl-smi">Integer</span><span class="pl-k">.</span>class, <span class="pl-smi">Collectors</span><span class="pl-k">.</span>summingInt((<span class="pl-smi">Integer</span> i) <span class="pl-k">-</span><span class="pl-k">&gt;</span> i))<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>wi<span class="pl-pds">"</span></span>))
+)</pre></div>
+
+<p>Of course, poppy supports aggregate with grouping.</p>
+
+<p><em>SQL</em></p>
+
+<div class="highlight highlight-source-sql"><pre><span class="pl-k">select</span> 
+    grade, 
+    room, 
+    <span class="pl-c1">avg</span>(weight) <span class="pl-k">as</span> weight, 
+    <span class="pl-c1">avg</span>(height) <span class="pl-k">as</span> height
+<span class="pl-k">from</span> Student
+<span class="pl-k">group by</span> grade, room</pre></div>
+
+<p><em>Poppy</em></p>
+
+<div class="highlight highlight-source-java"><pre>df
+.groupby(<span class="pl-s"><span class="pl-pds">"</span>grade<span class="pl-pds">"</span></span>,<span class="pl-s"><span class="pl-pds">"</span>room<span class="pl-pds">"</span></span>)
+.aggregate(
+    avgLong(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>),
+    avgLong(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>));</pre></div>
+
+<h2>
+<a id="sort" class="anchor" href="#sort" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sort</h2>
+
+<p>Sort the dataframe by columns.</p>
+
+<p><em>SQL</em></p>
+
+<div class="highlight highlight-source-sql"><pre><span class="pl-k">select</span> <span class="pl-k">*</span>
+<span class="pl-k">from</span> Student
+<span class="pl-k">order by</span> weight, height;</pre></div>
+
+<p><em>Poppy</em></p>
+
+<div class="highlight highlight-source-java"><pre>df<span class="pl-k">.</span>sort(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>);</pre></div>
+
+<p>Specify the sorting orders.</p>
+
+<p><em>SQL</em></p>
+
+<div class="highlight highlight-source-sql"><pre><span class="pl-k">select</span> <span class="pl-k">*</span>
+<span class="pl-k">from</span> Student
+<span class="pl-k">order by</span> weight <span class="pl-k">asc</span>, height <span class="pl-k">desc</span>;</pre></div>
+
+<p><em>Poppy</em></p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">import static</span> <span class="pl-smi">io.tenmax.poppy.SpecUtils.*</span>;
+
+df<span class="pl-k">.</span>sort(asc(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>), desc(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>));</pre></div>
+
+<h2>
+<a id="distinct" class="anchor" href="#distinct" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Distinct</h2>
+
+<p>Select the unique records by columns.</p>
+
+<p><em>SQL</em></p>
+
+<div class="highlight highlight-source-sql"><pre><span class="pl-k">select distinct</span> grade, room <span class="pl-k">from</span> Student;</pre></div>
+
+<p><em>Poppy</em></p>
+
+<div class="highlight highlight-source-java"><pre>df<span class="pl-k">.</span>distinct(<span class="pl-s"><span class="pl-pds">"</span>grade<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>room<span class="pl-pds">"</span></span>);</pre></div>
+
+<h1>
+<a id="partition-and-parallelism" class="anchor" href="#partition-and-parallelism" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Partition and Parallelism</h1>
+
+<p>Partition is the unit of parallelism. To leverage the multicore computing power, we can provide more than one partitions in the data sources. And in dataframe, we use the <code>parallel(n)</code> to define number of threads running in the thread pool</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-smi">DataFrame</span>
+.from(myDataSource)
+.parallel(<span class="pl-c1">4</span>)
+.aggregate(<span class="pl-c1">...</span>)
+.forEach(row <span class="pl-k">-</span><span class="pl-k">&gt;</span> {<span class="pl-c">/*...*/</span>})</pre></div>
+
+<h2>
+<a id="execution-context" class="anchor" href="#execution-context" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Execution Context</h2>
+
+<p><em>Poppy</em> introduces the concept of execution context. One execution context contains a thread pool with <em>n</em> threads and <em>m</em> partitions. It treat one partition as a task, and one thread only processses task at the same time. Internally, it make the projection, filtering, accumulation of aggregation as a pipeline. Once all tasks complete, the thread pool shutdown and release all the resources. </p>
+
+<p>The following diagram is an example of multiple partition with 3 threads in pool. And the final results would pipe the result to the queue and be pulled by the caller thread. </p>
+
+<p><img src="assets/executionContext.png" alt=""></p>
+
+<p>Another case is the DataFrame output the result to a DataSink directly. Here the result is invoked in the threads of execution context.</p>
+
+<p><img src="assets/executionContext2.png" alt=""></p>
+
+<p>If there is no parallel threads defined in the execution context, the default behaviour is to use the caller thread to iterate through all the partition sequentially. So there is no thread spawned in this case.</p>
+
+<p><img src="assets/executionContext3.png" alt=""></p>
+
+<p>For some operations, they would create a new execution context. Such as, aggregation, sort, distinct. Currently, they would create a new context with only one partition. The following example is a aggregation example, the partition data would be accumulated as a accumulated value and be combined all the results to the final result.</p>
+
+<p><img src="assets/executionContext4.png" alt=""></p>
         </section>
 
         <aside id="sidebar">
