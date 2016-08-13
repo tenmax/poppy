@@ -87,14 +87,14 @@
 <pre><code>&lt;dependency&gt;
   &lt;groupId&gt;io.tenmax&lt;/groupId&gt;
   &lt;artifactId&gt;poppy&lt;/artifactId&gt;
-  &lt;version&gt;0.1.0&lt;/version&gt;
+  &lt;version&gt;0.1.7&lt;/version&gt;
   &lt;type&gt;pom&lt;/type&gt;
 &lt;/dependency&gt;
 </code></pre>
 
 <p>Gradle</p>
 
-<pre><code>compile 'io.tenmax:poppy:0.1.0'
+<pre><code>compile 'io.tenmax:poppy:0.1.7'
 </code></pre>
 
 <h2>
@@ -235,7 +235,7 @@ df<span class="pl-k">.</span>project(
 <p><em>Poppy</em></p>
 
 <div class="highlight highlight-source-java"><pre>df<span class="pl-k">.</span>aggregate(
-    count()<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>c<span class="pl-pds">"</span></span>)
+    count()<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>c<span class="pl-pds">"</span></span>),
     avgLong(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>),
     avgLong(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>)
 );</pre></div>
