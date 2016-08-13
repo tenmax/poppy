@@ -181,7 +181,7 @@ select * from Student where height > 170;
 *Poppy*
 
 ```java
-df.filter(row -> row.getInteger("height") >= 170);
+df.filter(row -> row.getInteger("height") > 170);
 ```
 
 
