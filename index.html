@@ -219,7 +219,7 @@ df<span class="pl-k">.</span>project(
 
 <p><em>Poppy</em></p>
 
-<div class="highlight highlight-source-java"><pre>df<span class="pl-k">.</span>filter(row <span class="pl-k">-</span><span class="pl-k">&gt;</span> row<span class="pl-k">.</span>getInteger(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>) <span class="pl-k">&gt;=</span> <span class="pl-c1">170</span>);</pre></div>
+<div class="highlight highlight-source-java"><pre>df<span class="pl-k">.</span>filter(row <span class="pl-k">-</span><span class="pl-k">&gt;</span> row<span class="pl-k">.</span>getInteger(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>) <span class="pl-k">&gt;</span> <span class="pl-c1">170</span>);</pre></div>
 
 <h2>
 <a id="aggregation" class="anchor" href="#aggregation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Aggregation</h2>
@@ -235,7 +235,7 @@ df<span class="pl-k">.</span>project(
 <p><em>Poppy</em></p>
 
 <div class="highlight highlight-source-java"><pre>df<span class="pl-k">.</span>aggregate(
-    count()<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>c<span class="pl-pds">"</span></span>),
+    count()<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>c<span class="pl-pds">"</span></span>)
     avgLong(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>weight<span class="pl-pds">"</span></span>),
     avgLong(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>as(<span class="pl-s"><span class="pl-pds">"</span>height<span class="pl-pds">"</span></span>)
 );</pre></div>
