@@ -32,6 +32,6 @@ publish {
     desc = DESCRIPTION
     website = WEBSITE
     repoName = BINTRAY_REPO
-    bintrayUser = BINTRAY_USER
-    bintrayKey = BINTRAY_KEY
+    bintrayUser = project.hasProperty('BINTRAY_USER') ? BINTRAY_USER : ''
+    bintrayKey = project.hasProperty('BINTRAY_KEY') ? BINTRAY_KEY : ''
 }
